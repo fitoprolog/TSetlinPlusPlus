@@ -6,6 +6,7 @@
 
 TSetlin::TSetlin(uint32_t forgetTh_  , uint32_t  memorizeTh_  , uint32_t numberOfPositiveLiterals_){
   memory = new uint8_t[numberOfPositiveLiterals_];
+  memset(memory,85,(size_t) numberOfPositiveLiterals_);
   forgetTh   = forgetTh_;
   memorizeTh = memorizeTh_;
   numberOfPositiveLiterals = numberOfPositiveLiterals_;
@@ -30,6 +31,7 @@ bool TSetlin::getLiteralMemoryValue(uint32_t literal){
   literalRegister[1]=cbyte >> 4;
   return true;
 }
+
 bool TSetlin::operate(uint32_t  literal ,bool negative,bool decrease){
     bool got = getLiteralMemoryValue(literal);
     if(!got){
@@ -39,11 +41,11 @@ bool TSetlin::operate(uint32_t  literal ,bool negative,bool decrease){
     if (f ==10 && !decrease || f==0 && decrease) {
       return false;
     }
-    uint8_t s= decrease ? -1 : 1;
+    f = decrease ? f-1 : f+1;
     if (negative){
-      memory[literal] = (memory[literal] & 0x0F) | ((f+s) <<4);
+      memory[literal] = (memory[literal] & 0x0F) | (f <<4);
     }else{
-      memory[literal] = (memory[literal] & 0xF0) | (f+s);
+      memory[literal] = (memory[literal] & 0xF0) | f;
     }
     return true;
 }
@@ -57,12 +59,12 @@ bool TSetlin::increase(uint32_t literal ,bool negative){
 }
 
 bool TSetlin::memorize(uint32_t literal , bool negative){
-  if (random()%100 > memorizeTh) return false;
+  if (random()%10> memorizeTh) return false;
   return increase(literal,negative);
 }
 
 bool TSetlin::forget(uint32_t literal , bool negative){
-  if (random()%100 > forgetTh) return false;
+  if (random()%10 > forgetTh) return false;
   return decrease(literal,negative);
 }
 
@@ -99,6 +101,7 @@ void TSetlin::typeIIFeedback(uint8_t *observation ){
       increase(l,true);
     return true;
   );
+  updateConditionMask();
 }
 
 void TSetlin::typeIFeedback(uint8_t *observation){
@@ -124,12 +127,14 @@ void TSetlin::typeIFeedback(uint8_t *observation){
       }
       return true;
   );
+  updateConditionMask();
 }
 uint32_t TSetlin::choose(uint32_t options){
   return random()%options;
 }
 void TSetlin::train(std::vector<uint8_t*>& targetClass, std::vector<std::vector<uint8_t*>>& otherClasses, 
     uint32_t epochs){
+  updateConditionMask();
   for (int e=0; e !=epochs; e++){
     if (random()%2){
       typeIFeedback(targetClass[choose(targetClass.size())]);
@@ -137,12 +142,11 @@ void TSetlin::train(std::vector<uint8_t*>& targetClass, std::vector<std::vector<
       std::vector<uint8_t*> other = otherClasses[choose(otherClasses.size())];
       typeIIFeedback(other[choose(other.size())]);
     }
-    std::cout << "Epoch " << e << std::endl;;
   }
-  updateConditionMask();
 }
 
 void TSetlin::updateConditionMask(){
+  memset(conditionMask,0,maskSize);
    ITERATE_OVER_LITERALS(
       bool exists =getLiteralMemoryValue(l);
       if (exists)
@@ -153,9 +157,16 @@ void TSetlin::updateConditionMask(){
 }
 
 void TSetlin::dumpRules(){
+  updateConditionMask();
   for(int b=0; maskSize != b ; b++){
     uint8_t byte = conditionMask[b];
     std::cout <<  std::bitset<8>(byte) << " ";
   }
+  std::cout << std::endl;
+  for(int l=0; numberOfPositiveLiterals!=l; l++){
+    getLiteralMemoryValue(l);
+    std::cout << (int)literalRegister[0]  << " " << (int)literalRegister[1] << std::endl;
+  }
+
   std::cout << std::endl;
 }

@@ -18,9 +18,9 @@ class TSetlin{
     uint8_t *conditionMask;
     uint8_t *forgetMask;
     uint32_t maskSize;
-    void updateConditionMask();
   public:
      TSetlin(uint32_t forgetTh_  , uint32_t memorizeTh_  , uint32_t numberOfPositiveLiterals);
+     void updateConditionMask();
      bool literalIsValid(uint32_t number);
      bool getLiteralMemoryValue(uint32_t literal);
      bool operate(uint32_t  literal ,bool negative,bool decrease);
