@@ -167,6 +167,5 @@ void TSetlin::dumpRules(){
     getLiteralMemoryValue(l);
     std::cout << (int)literalRegister[0]  << " " << (int)literalRegister[1] << std::endl;
   }
-
   std::cout << std::endl;
 }
